@@ -19,6 +19,7 @@ try:
         bearPeriods = []  # Store simple bear periods
         drawdownPeriods = []  # Store prices in the current drawdown period
         recoveryPeriods = []  # Store prices in the current recovery period
+        currBears = []
         
         startingBear = None
         cumulativeBear = 0
@@ -36,14 +37,17 @@ try:
                         troughs.append((currTrough, sp500.index[troughIdx]))
                         drawdownPeriods.append((sp500.index[maxIdx], sp500.index[troughIdx], (currTrough - currMax) / currMax ))
                         recoveryPeriods.append((sp500.index[troughIdx], sp500.index[leftIdx], (left - currTrough) / currTrough ))
+                        bearPeriods.extend(currBears)
+                        currBears = []
                     currTrough, troughIdx = right, rightIdx
                     peaks.append((left, sp500.index[leftIdx]))
                     currMax, maxIdx = left, leftIdx
                 if right < currTrough:
+                    currBears = []
                     currTrough, troughIdx = right, rightIdx
                 if cumulativeBear < 0:
                     if cumulativeBear + change < -.05:
-                        bearPeriods.append((sp500.index[startingBear], sp500.index[leftIdx], cumulativeBear))
+                        currBears.append((sp500.index[startingBear], sp500.index[leftIdx], cumulativeBear))
                         cumulativeBear = 1
                 elif cumulativeBear == 0:
                     if change < -.05:
@@ -53,7 +57,7 @@ try:
                         cumulativeBear += change
             else:
                 if cumulativeBear < 0:
-                    bearPeriods.append((sp500.index[startingBear], sp500.index[leftIdx], cumulativeBear))
+                    currBears.append((sp500.index[startingBear], sp500.index[leftIdx], cumulativeBear))
                 cumulativeBear = 0
 
         # Create DataFrames to display peaks, troughs, and bear periods
